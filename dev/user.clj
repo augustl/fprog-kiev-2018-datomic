@@ -60,14 +60,12 @@
 
   )
 
-
 (comment
   ;; Let's get the entity!
   (-> (d/entity db-1 (get-in tx-res-1 [:tempids "1"]))
       (d/touch))
 
   )
-
 
 (comment
   ;; Let's run a query!
@@ -100,7 +98,6 @@
 
   )
 
-
 (comment
   ;;
   (d/q '[:find ?a ?v
@@ -122,7 +119,6 @@
 
   )
 
-
 (comment
   (->> (d/q '[:find [?a ...]
               :in $ ?e
@@ -132,7 +128,6 @@
             august-id))
 
   )
-
 
 (comment
   (->> (d/q '[:find [?a ...]
@@ -145,32 +140,27 @@
 
   )
 
-
 (comment
   (-> (d/entity db-1 august-id)
       (d/touch))
 
   )
-
 
 (comment
   (def tx-res-2 @(d/transact conn [[:db/add august-id :person/age 32]]))
 
   )
 
-
 (comment
   (-> (d/entity db-1 august-id)
       (d/touch))
 
   )
 
-
 (comment
   (def db-2 (d/db conn))
 
   )
-
 
 (comment
   (-> (d/entity db-2 august-id)
@@ -178,13 +168,11 @@
 
   )
 
-
 (comment
   (-> (d/entity (:db-after tx-res-1) august-id)
       (d/touch))
 
   )
-
 
 (comment
   (-> (d/entity (:db-before tx-res-1) august-id)
@@ -192,20 +180,17 @@
 
   )
 
-
 (comment
   (-> (d/entity (:db-before tx-res-2) august-id)
       (d/touch))
 
   )
 
-
 (comment
   (-> (d/entity (:db-after tx-res-2) august-id)
       (d/touch))
 
   )
-
 
 (comment
   (d/q '[:find ?a ?v ?t
@@ -216,7 +201,6 @@
        august-id)
 
   )
-
 
 (comment
   (->> (d/q '[:find ?a ?v ?t
