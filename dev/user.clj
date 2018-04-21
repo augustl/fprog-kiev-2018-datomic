@@ -213,3 +213,38 @@
        (group-by :tx))
 
   )
+
+(comment
+  (d/q '[:find ?e
+         :where
+         [?e :color "red"]]
+       [[1 :color "blue"]
+        [2 :color "red"]
+        [3 :color "yellow"]
+        [4 :color "red"]])
+
+  )
+
+(comment
+  (d/q '[:find (count ?e) .
+         :where
+         [?e :color "red"]]
+       [[1 :color "blue"]
+        [2 :color "red"]
+        [3 :color "yellow"]
+        [4 :color "red"]])
+
+  )
+
+
+(comment
+  (d/q '[:find ?company-name
+         :in $db $x ?name
+         :where
+         [$db ?p-e :person/name ?name]
+         [$x ?c-e :company/name ?company-name]]
+       db-2
+       [[august-id :person/company 123]
+        [123 :company/name "Kodemaker"]]
+       "August Lilleaas")
+  )
