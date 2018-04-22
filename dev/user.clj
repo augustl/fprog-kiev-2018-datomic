@@ -8,7 +8,6 @@
   )
 
 (comment
-
   ;; First step is to initialize the database
   (d/create-database "datomic:mem://localhost:4334/kiev-fprog")
 
@@ -99,7 +98,7 @@
   )
 
 (comment
-  ;;
+  ;; Query using the entity id, and see what a and v is
   (d/q '[:find ?a ?v
          :in $ ?e
          :where
@@ -110,6 +109,7 @@
   )
 
 (comment
+  ;; Get a only
   (d/q '[:find ?a
          :in $ ?e
          :where
@@ -120,6 +120,7 @@
   )
 
 (comment
+  ;; Get a more convenient structure back from the query
   (->> (d/q '[:find [?a ...]
               :in $ ?e
               :where
@@ -130,6 +131,7 @@
   )
 
 (comment
+  ;; Get the real name. Anything can have a name, not just attributes!
   (->> (d/q '[:find [?a ...]
               :in $ ?e
               :where
@@ -141,28 +143,33 @@
   )
 
 (comment
+  ;; Convenience api. Touch is not needed, but entity is lazy, touch realizes it
   (-> (d/entity db-1 august-id)
       (d/touch))
 
   )
 
 (comment
+  ;; Update my age
   (def tx-res-2 @(d/transact conn [[:db/add august-id :person/age 32]]))
 
   )
 
 (comment
+  ;; wat
   (-> (d/entity db-1 august-id)
       (d/touch))
 
   )
 
 (comment
+  ;; Get new db value
   (def db-2 (d/db conn))
 
   )
 
 (comment
+  ;; phew
   (-> (d/entity db-2 august-id)
       (d/touch))
 
@@ -193,21 +200,76 @@
   )
 
 (comment
+  ;; Add cardinality/many
+  @(d/transact conn [{:db/ident :person/favorite-foods
+                      :db/valueType :db.type/string
+                      :db/cardinality :db.cardinality/many}])
+
+  )
+
+(comment
+  ;; <3 pizza (not really though)
+  @(d/transact conn [[:db/add august-id :person/favorite-foods "pizza"]])
+
+  )
+
+(comment
+  ;; We get the most recent db directly.
+  ;; It's a set!
+  (-> (d/entity (d/db conn) august-id)
+      (d/touch))
+
+  )
+
+(comment
+  ;; More food
+  @(d/transact conn [[:db/add august-id :person/favorite-foods "eggs"]
+                     [:db/add august-id :person/favorite-foods "pasta"]])
+
+  )
+
+(comment
+  ;; They're all there!
+  (-> (d/entity (d/db conn) august-id)
+      (d/touch))
+
+  )
+
+(comment
+  ;; More food
+  @(d/transact conn [[:db/retract august-id :person/favorite-foods "eggs"]])
+
+  )
+
+(comment
+  ;; Eggs are gone
+  (-> (d/entity (d/db conn) august-id)
+      (d/touch))
+
+(comment
+  ;; Store a reference to most recent db
+  (def db-3 (d/db conn))
+
+  )
+
+(comment
+  ;; Query the history of the database
   (d/q '[:find ?a ?v ?t
          :in $ ?e
          :where
          [?e ?a ?v ?t true]]
-       (d/history db-2)
+       (d/history db-3)
        august-id)
 
   )
 
 (comment
+  ;; Prettier output
   (->> (d/q '[:find ?a ?v ?t
               :in $ ?e
               :where
               [?e ?a ?v ?t true]]
-            (d/history db-2)
+            (d/history db-3)
             august-id)
        (map (fn [[a v t]] {:attr (d/ident db-2 a) :val v :tx t}))
        (group-by :tx))
@@ -215,6 +277,20 @@
   )
 
 (comment
+  ;; Transactions are entities!
+  (->> (d/q '[:find ?a ?v ?t
+              :in $ ?e
+              :where
+              [?e ?a ?v ?t true]]
+            (d/history db-3)
+            august-id)
+       (map (fn [[a v t]] {:attr (d/ident db-2 a) :val v :tx (d/touch (d/entity db-3 t))}))
+       (group-by #(get-in % [:tx :db/id])))
+
+  )
+
+(comment
+  ;; Not just dbs
   (d/q '[:find ?e
          :where
          [?e :color "red"]]
@@ -226,6 +302,8 @@
   )
 
 (comment
+  ;; Various aggregates are supported
+  ;; Still useful even though query engine is local
   (d/q '[:find (count ?e) .
          :where
          [?e :color "red"]]
@@ -238,12 +316,13 @@
 
 
 (comment
+  ;; Join between database and non-database
   (d/q '[:find ?company-name
          :in $db $x ?name
          :where
          [$db ?p-e :person/name ?name]
          [$x ?c-e :company/name ?company-name]]
-       db-2
+       db-3
        [[august-id :person/company 123]
         [123 :company/name "Kodemaker"]]
        "August Lilleaas")
