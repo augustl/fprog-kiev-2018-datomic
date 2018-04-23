@@ -3,6 +3,7 @@
 
 (comment
   ;; We need to be able to call the Datomic APIs
+
   (require '[datomic.api :as d])
 
   )
@@ -236,7 +237,7 @@
   )
 
 (comment
-  ;; More food
+  ;; Less food
   @(d/transact conn [[:db/retract august-id :person/favorite-foods "eggs"]])
 
   )
@@ -245,6 +246,8 @@
   ;; Eggs are gone
   (-> (d/entity (d/db conn) august-id)
       (d/touch))
+
+  )
 
 (comment
   ;; Store a reference to most recent db
@@ -257,7 +260,7 @@
   (d/q '[:find ?a ?v ?t
          :in $ ?e
          :where
-         [?e ?a ?v ?t true]]
+         [?e ?a ?v ?t]]
        (d/history db-3)
        august-id)
 
@@ -314,7 +317,6 @@
 
   )
 
-
 (comment
   ;; Join between database and non-database
   (d/q '[:find ?company-name
@@ -326,4 +328,4 @@
        [[august-id :person/company 123]
         [123 :company/name "Kodemaker"]]
        "August Lilleaas")
-  )
+  )|
